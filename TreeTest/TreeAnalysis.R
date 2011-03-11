@@ -77,12 +77,3 @@ qqnorm(w1$vals,
   ylab="Sample Quantiles of the Leaf Biomass")
 # Add the theoretical line
 qqline(w1$vals)
-
-
-
-
-
-
-
-
-

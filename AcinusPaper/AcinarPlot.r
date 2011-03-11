@@ -28,31 +28,44 @@ boxplot(Data.original,
 boxplot(Data.original[,1:2],
   main="Only Day 4 and 10, to see the difference",
   notch=TRUE,
+  col="lightgray",
   outline=FALSE) # Plot only Day 4 and 10 to see the difference  
 # beanplot(Data.original,
-#  main="Beanplot of Acinar Volumes, original data",
-#  col="lightgray")
+#   main="Beanplot of Acinar Volumes, original data",
+#   col="lightgray")
 summary(Data.original)
 
 # Sorted AcinusExtractionDataFile in descending size order.
 # Saved as AcinusExtractionDataFileWithoutOutliers.csv
 # Iteratively used boxplo(Data[,column] to identified outliers, delete them, save file and plot again until no outliers are shown anymore.
-# Repteat for each day, then you've got Data-File without outliers
+# Repeated for each day, then you've got Data-File without outliers
 Data<-read.csv("AcinusExtractionDataFileWithoutOutliers.csv",head=TRUE,sep=";")
 # boxplot(Data[,5])
 # Give out Details of Data
 summary(Data)
-# Give out Details
+# Calculate Mean and Standard Deviation
 Data.mean <- mean(Data,na.rm=TRUE)
 Data.sd <- sd(Data,na.rm=TRUE)
 # Increase of Volume compared to Day 4
 Data.mean/Data.mean[1]
 # How many Volumes?
-length(na.exclude(Data[,1]))
-length(na.exclude(Data[,2]))
-length(na.exclude(Data[,3]))
-length(na.exclude(Data[,4]))
-length(na.exclude(Data[,5]))
+
+# Histogramme Plotten mit derselben x-Achse
+# ---> evtl. für Bericht von Johannes
+hist(Data$D4, plot=TRUE,breaks=10,xlim=c(0,0.3),main="Volume Histogram of Day 4",xlab="Volume")
+hist(Data$D10,plot=TRUE,breaks=10,xlim=c(0,0.3),main="Volume Histogram of Day 10",xlab="Volume")
+hist(Data$D21,plot=TRUE,breaks=10,xlim=c(0,0.3),main="Volume Histogram of Day 21",xlab="Volume")
+hist(Data$D36,plot=TRUE,breaks=10,xlim=c(0,0.3),main="Volume Histogram of Day 36",xlab="Volume")
+hist(Data$D60,plot=TRUE,breaks=10,xlim=c(0,0.3),main="Volume Histogram of Day 60",xlab="Volume")
+
+# for(i in 1:5) N[,i]<-length(na.exclude(Data[,i]))
+N04<-length(na.exclude(Data[,1]))
+N10<-length(na.exclude(Data[,2]))
+N21<-length(na.exclude(Data[,3]))
+N36<-length(na.exclude(Data[,4]))
+N60<-length(na.exclude(Data[,5]))
+Data.NumberOfAcini <- c(N04,N10,N21,N36,60)
+Data.NumberOfAcini
 
 # Plot the Data
 boxplot(Data,
@@ -63,13 +76,18 @@ boxplot(Data,
   xlab="Days after birth"
   )
 boxplot(Data[,1:2],
-  main="Only Day 4 and 10, without outliers, to see the difference",
+  varwidth=TRUE,
+  main="Only Day 4 and 10",
+  col="lightgray",
   notch=TRUE) # Plot only Day 4 and 10 to see the difference
-boxplot(Data[,1:3],notch=TRUE)
+boxplot(Data[,1:3],
+  varwidth=TRUE,
+  main="Days 4, 10 and 21",
+  notch=TRUE,
+  col="lightgray")
 # beanplot(Data,
-#  main="Beanplot of acinar volumes with removed outliers",
-#  col="lightgray")
-
+#   main="Beanplot of acinar volumes with removed outliers",
+#   col="lightgray")
 
 # Plot single days
 par(mfrow=c(5,1))
@@ -82,27 +100,25 @@ plot(Data$D60)
 par(mfrow=c(1,1))
 par(mar=c(5,4,4,2)+0.1) # set margins back to default
 
-# Calculate Mean and Standard Deviation
-Data.mean <- mean(Data,na.rm=TRUE)
-Data.sd <- sd(Data,na.rm=TRUE)
+# Display Mean an Standart Deviation in an xy-plot
 days<-c(4,10,21,36,60)
 plot(days,Data.mean,
   type="b", # both line and dots
-  main="Mean of the Data over the postnatal lung development. Arrows show SD",
+  main="Means of acinar volumes",
   xlab="Days after birth",
   ylab="Mean acinar volume [microliter]")
 points(days,Data.mean,col="red")
-# arrows(days, Data.mean - Data.sd, days, Data.mean + Data.sd,code = 3, col = "red") # Draw Arrows with +- SD
+arrows(days, Data.mean - Data.sd, days, Data.mean + Data.sd,code = 3, col = "red") # Draw Arrows with +- SD
 
 # Shift data to the right, if desired
 boxplot(Data,
   varwidth=TRUE,
   notch=TRUE,
   col="lightgray",
-  main="Boxplot of Acinar Volumes",
+  main="Boxplot of Acinar Volumes, with Means and Standard Deviation",
   xlab="Days after birth"
   )
-Data.shifted <- seq(Data) + 0.25
+Data.shifted <- seq(Data) + 0.2
 points(Data.shifted, Data.mean, col = "red") # Draw Means into Boxplot
 arrows(Data.shifted, Data.mean - Data.sd, Data.shifted, Data.mean + Data.sd,code = 3, col = "red") # Draw Arrows with +- SD
 
