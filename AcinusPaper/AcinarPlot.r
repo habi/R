@@ -43,31 +43,23 @@ Data<-read.csv("AcinusExtractionDataFileWithoutOutliers.csv",head=TRUE,sep=";")
 # boxplot(Data[,5])
 # Give out Details of Data
 summary(Data)
-# Calculate Mean and Standard Deviation
+# Calculate Mean, Standard Deviation and Increase compared to Day 4
 Data.mean <- mean(Data,na.rm=TRUE)
 Data.sd <- sd(Data,na.rm=TRUE)
-# Increase of Volume compared to Day 4
-Data.mean/Data.mean[1]
-# How many Volumes?
+Data.Increase <- Data.mean/Data.mean[1]
+# How many Volumes did we extract?
+# N04<-length(na.exclude(Data[,12]))
+for (i in 1:5) Data.NumberOfAcini[i]<-length(na.exclude(Data[,i]))
+Data.NumberOfAcini
 
-# Histogramme Plotten mit derselben x-Achse
-# ---> evtl. für Bericht von Johannes
+# Plot Histograms of Data
 hist(Data$D4, plot=TRUE,breaks=10,xlim=c(0,0.3),main="Volume Histogram of Day 4",xlab="Volume")
 hist(Data$D10,plot=TRUE,breaks=10,xlim=c(0,0.3),main="Volume Histogram of Day 10",xlab="Volume")
 hist(Data$D21,plot=TRUE,breaks=10,xlim=c(0,0.3),main="Volume Histogram of Day 21",xlab="Volume")
 hist(Data$D36,plot=TRUE,breaks=10,xlim=c(0,0.3),main="Volume Histogram of Day 36",xlab="Volume")
 hist(Data$D60,plot=TRUE,breaks=10,xlim=c(0,0.3),main="Volume Histogram of Day 60",xlab="Volume")
 
-# for(i in 1:5) N[,i]<-length(na.exclude(Data[,i]))
-N04<-length(na.exclude(Data[,1]))
-N10<-length(na.exclude(Data[,2]))
-N21<-length(na.exclude(Data[,3]))
-N36<-length(na.exclude(Data[,4]))
-N60<-length(na.exclude(Data[,5]))
-Data.NumberOfAcini <- c(N04,N10,N21,N36,60)
-Data.NumberOfAcini
-
-# Plot the Data
+## Boxplot of the Data
 boxplot(Data,
   varwidth=TRUE,
   notch=TRUE,
@@ -89,6 +81,43 @@ boxplot(Data[,1:3],
 #   main="Beanplot of acinar volumes with removed outliers",
 #   col="lightgray")
 
+## Plot Increase
+# Stefans Data
+StefansVolumina <- c(0.305,0.508,1.048,2.062,2.964)
+StefansIncrease <- StefansVolumina / StefansVolumina[1] # from p:\doc\#Talks\2011-01-27-USGEB\Datenblattstefan.xls (-> MEAN "rul")
+plot(days,StefansIncrease,
+  type="b",
+  main="Increase of RLL Volume to Day 4",
+  pch=1,
+  col="blue")
+# Our Data
+plot(days,Data.Increase,
+  ylim=range(Data.Increase),
+  type="b",
+  main="Increase of Acinar Volume to Day 4",
+  pch=2,
+  col="red")
+# Combination
+plot(days,StefansIncrease,
+  ylim=range(Increase),
+  type="b",
+  main="Increase of Volumes compared to Day 4",
+  xlab="Days",
+  ylab="Increase",
+  pch=1,
+  col="blue")
+par(new=TRUE) # actually don't make a new plot    O.o
+plot(days,Data.Increase,
+  ylim=range(Data.Increase),
+  type="b",
+  axes=FALSE,
+  main="",
+  xlab="",
+  ylab="",
+  pch=2,
+  col="red")
+legend(list(x=50,y=5),legend = c("RLL","Acini"),pch=1:2,lty=1,col=c("blue","red"))
+
 # Plot single days
 par(mfrow=c(5,1))
 par(mar=c(3,5,1,2)) # set margins (bottom, left, top, right)
@@ -106,9 +135,9 @@ plot(days,Data.mean,
   type="b", # both line and dots
   main="Means of acinar volumes",
   xlab="Days after birth",
-  ylab="Mean acinar volume [microliter]")
-points(days,Data.mean,col="red")
-arrows(days, Data.mean - Data.sd, days, Data.mean + Data.sd,code = 3, col = "red") # Draw Arrows with +- SD
+  ylab="Mean acinar volume [microliter]",
+  col="red")
+arrows(days, Data.mean - Data.sd, days, Data.mean + Data.sd,code = 3) # Draw Arrows with +- SD
 
 # Shift data to the right, if desired
 boxplot(Data,
@@ -136,16 +165,16 @@ arrows(Data.shifted, Data.mean - Data.sd, Data.shifted, Data.mean + Data.sd,code
 # plot(fit)
 
 ## T-Test (the same results as =ttest(d4,d10,2,3) in Excel)
-# t.test(Data$D4,Data$D10)
-# t.test(Data$D4,Data$D21)
-# t.test(Data$D4,Data$D36)
-# t.test(Data$D4,Data$D60)
+t.test(Data$D4,Data$D10)
+t.test(Data$D4,Data$D21)
+t.test(Data$D4,Data$D36)
+t.test(Data$D4,Data$D60)
 # 
-# t.test(Data$D10,Data$D21)
-# t.test(Data$D10,Data$D36)
-# t.test(Data$D10,Data$D60)
+t.test(Data$D10,Data$D21)
+t.test(Data$D10,Data$D36)
+t.test(Data$D10,Data$D60)
 # 
-# t.test(Data$D21,Data$D36)
-# t.test(Data$D21,Data$D60)
+t.test(Data$D21,Data$D36)
+t.test(Data$D21,Data$D60)
 # 
-# t.test(Data$D36,Data$D60)
+t.test(Data$D36,Data$D60)
