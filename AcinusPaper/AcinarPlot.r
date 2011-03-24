@@ -9,7 +9,7 @@ setwd("P:/doc/#R/AcinusPaper")
 library(beanplot) # load Beanplot library (http://www.jstatsoft.org/v28/c01/)
 
 # Read Data
-Data.original <-read.csv("AcinusExtractionDataFile.csv",head=TRUE,sep=";")
+Data.original <-read.csv("AcinusExtractionDataFileNodeHeight2.csv",head=TRUE,sep=";")
 # Draw original Data
 boxplot(Data.original,
   main="Boxplot of Acinar Volumes, original data",
@@ -39,8 +39,8 @@ summary(Data.original)
 # Saved as AcinusExtractionDataFileWithoutOutliers.csv
 # Iteratively used boxplo(Data[,column] to identified outliers, delete them, save file and plot again until no outliers are shown anymore.
 # Repeated for each day, then you've got Data-File without outliers
-Data<-read.csv("AcinusExtractionDataFileWithoutOutliers.csv",head=TRUE,sep=";")
-# boxplot(Data[,5])
+Data<-read.csv("AcinusExtractionDataFileWithoutOutliersNodeHeight2.csv",head=TRUE,sep=";")
+# boxplot(Data[,4])
 # Give out Details of Data
 summary(Data)
 # Calculate Mean, Standard Deviation and Increase compared to Day 4
