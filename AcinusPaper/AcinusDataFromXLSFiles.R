@@ -8,19 +8,22 @@
 
 setwd("p:/doc/#R/AcinusPaper")
 library(gdata) # needed to read XLS-Files (needs an installation of PERL: http://www.perl.org/get.html)
+library(outliers)
 
 ## Setup stuff
 DoPlots=0       # 1 does the Plots, something else doen't
 DoBoxplots=1    # 1 does the BoxPlots, something else doen't
+DoBoxplotsWithoutOutliers=0    # 1 does the BoxPlots without the Outliers, something else doen't
 Days <- c(04,10,21,36,60)
 
 # Days <- 04
 # Days <- 10
 # Days <- 21
-# Days <- 36
+Days <- 36
 # Days <- 60
 
 ## Initialize empty Variables 
+Time <- format(Sys.time(), "%d.%b %H:%M")
 Mean <- NaN
 NumberOfCounts <- NaN
 NumberOfAcini <- NaN
@@ -44,6 +47,13 @@ for (currentDay in 1:length(Days)) { # Iterate trough the days
     for (i in 1:length(SheetNames)) { # Iterate through every sheet in the current XLS-File
         # cat("reading Sheet #",i," named '",SheetNames[i],"'\n",sep="")
         Data <- read.xls(FileLocation,sheet=i) # read Sheet Nr. i
+###################### REMOVE OUTLIERS
+# NEEDS SOME MORE LOOKING INTO!
+#         if (!is.na(Data$Volume[1])) {
+#             Data$Volume<-rm.outlier(Data$Volume,fill=TRUE)
+#             cat("REMOVING OUTLIERS\n")
+#         }
+###################### REMOVE OUTLIERS
         Mean[i] <- mean(Data$Volume,na.rm=TRUE) # Calculate the arithmetic mean without the empty cells and save into current Mean
         NumberOfCounts[i] <- length(Data$Volume)
         NumberOfAcini[i] <- length(na.exclude(Data$Volume))
@@ -59,7 +69,7 @@ for (currentDay in 1:length(Days)) { # Iterate trough the days
                 Mean[i], "(and omitted",sum(is.na(Data$Volume)),"empty counts).\n") # Give out something to read in the console
             } # end if Mean[i] is not empty
             if (is.nan(Mean[i])) { # if Mean[i] is empty, we probably have an empty Sheet...
-                cat("For", SheetNames[i], "we counted no Acini, this means that the sheet is probably emtpy.\n")
+                cat("For", SheetNames[i], "we counted no Acini, which means that the sheet is probably emtpy.\n")
             } # end if Mean[i] *is* empty
         } # end iterate through sheets
 
@@ -74,7 +84,7 @@ for (currentDay in 1:length(Days)) { # Iterate trough the days
             Data <- read.xls(FileLocation,sheet=i) # read Sheet Nr. i
             ConcatenatedVolumes[1:length(Data$Volume),i] = Data$Volume # put just read Data into ith column of Array
         } # end iterate through sheets
-        BoxPlotTitle <- paste(FileName,"| total Acini:", sum(NumberOfAcini), "| global Mean:", sprintf("%.4f", mean(Mean,na.rm=TRUE)), "\n")
+        BoxPlotTitle <- paste(FileName,"| total Acini:", sum(NumberOfAcini), "| global Mean:", sprintf("%.4f", mean(Mean,na.rm=TRUE)), "|", Time, "\n")
         boxplot(ConcatenatedVolumes,
             notch=TRUE,
             varwidth=TRUE,
@@ -83,15 +93,17 @@ for (currentDay in 1:length(Days)) { # Iterate trough the days
             names=SheetNames,
             main=BoxPlotTitle)
         abline(h=GlobalMean, col = "red")
-        BoxPlotTitle <- paste(FileName,"| total Acini:", sum(NumberOfAcini), "| global Mean:", sprintf("%.4f", mean(Mean,na.rm=TRUE)), "| NO OUTLIERS (->MEAN)!\n")
-        boxplot(ConcatenatedVolumes,
-            notch=TRUE,
-            varwidth=TRUE,
-            col="lightgray",
-            outline=FALSE, # Don't plot outliers
-            names=SheetNames,
-            main=BoxPlotTitle)
-        abline(h=GlobalMean, col = "red")    
+        if (DoBoxplotsWithoutOutliers==1) {
+            BoxPlotTitle <- paste(FileName,"| total Acini:", sum(NumberOfAcini), "| global Mean:", sprintf("%.4f", mean(Mean,na.rm=TRUE)), "|", Time, "| NO OUTLIERS (->MEAN)!\n")
+            boxplot(ConcatenatedVolumes,
+                notch=TRUE,
+                varwidth=TRUE,
+                col="lightgray",
+                outline=FALSE, # Don't plot outliers
+                names=SheetNames,
+                main=BoxPlotTitle)
+            abline(h=GlobalMean, col = "red")
+        }
         cat("---\n")
     }
 } # end iterate through Days
