@@ -6,6 +6,8 @@
 # 21.04.2011: Finally got the Array-thingy working.
 ##################################################################################
 
+rm(list=ls()) # clear EVERYTHING!
+
 setwd("p:/doc/#R/AcinusPaper")
 library(gdata) # needed to read XLS-Files (needs an installation of PERL: http://www.perl.org/get.html)
 library(outliers)
@@ -16,15 +18,16 @@ DoBoxplots=1    # 1 does the BoxPlots, something else doen't
 DoBoxplotsWithoutOutliers=0    # 1 does the BoxPlots without the Outliers, something else doen't
 Days <- c(04,10,21,36,60)
 
-# Days <- 04
+Days <- 04
 # Days <- 10
 # Days <- 21
-Days <- 36
+# Days <- 36
 # Days <- 60
 
 ## Initialize empty Variables 
 Time <- format(Sys.time(), "%d.%b %H:%M")
 Mean <- NaN
+GlobalMean <- NaN
 NumberOfCounts <- NaN
 NumberOfAcini <- NaN
 
@@ -51,7 +54,7 @@ for (currentDay in 1:length(Days)) { # Iterate trough the days
 # NEEDS SOME MORE LOOKING INTO!
 #         if (!is.na(Data$Volume[1])) {
 #             Data$Volume<-rm.outlier(Data$Volume,fill=TRUE)
-#             cat("REMOVING OUTLIERS\n")
+#             cat("REMOVING OUTLIERS FOR", SheetNames[i], "\n")
 #         }
 ###################### REMOVE OUTLIERS
         Mean[i] <- mean(Data$Volume,na.rm=TRUE) # Calculate the arithmetic mean without the empty cells and save into current Mean
@@ -78,7 +81,7 @@ for (currentDay in 1:length(Days)) { # Iterate trough the days
     if (DoBoxplots==1) {
         cat("Extracting single Volumes and saving them into an array for boxplotting\n")
         ConcatenatedVolumes = array(NaN,c(max(NumberOfCounts),length(SheetNames))) # Initialize Array for Volumes
-        GlobalMean = mean(Mean,na.rm=TRUE)        
+        GlobalMean[currentDay] = mean(Mean,na.rm=TRUE)        
         for (i in 1:length(SheetNames)) { # Iterate through every sheet in the current XLS-File
             cat("Working on sheet ",i,"/",length(SheetNames),"\n",sep="")
             Data <- read.xls(FileLocation,sheet=i) # read Sheet Nr. i
@@ -92,7 +95,7 @@ for (currentDay in 1:length(Days)) { # Iterate trough the days
             outline=TRUE, # Plot plot outliers
             names=SheetNames,
             main=BoxPlotTitle)
-        abline(h=GlobalMean, col = "red")
+        abline(h=GlobalMean[currentDay], col = "red")
         if (DoBoxplotsWithoutOutliers==1) {
             BoxPlotTitle <- paste(FileName,"| total Acini:", sum(NumberOfAcini), "| global Mean:", sprintf("%.4f", mean(Mean,na.rm=TRUE)), "|", Time, "| NO OUTLIERS (->MEAN)!\n")
             boxplot(ConcatenatedVolumes,
@@ -102,8 +105,12 @@ for (currentDay in 1:length(Days)) { # Iterate trough the days
                 outline=FALSE, # Don't plot outliers
                 names=SheetNames,
                 main=BoxPlotTitle)
-            abline(h=GlobalMean, col = "red")
+            abline(h=GlobalMean[currentDay], col = "red")
         }
         cat("---\n")
     }
 } # end iterate through Days
+
+GlobalMean
+
+Increase <- GlobalMean/GlobalMean[1]
