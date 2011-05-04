@@ -16,7 +16,7 @@ require(tikzDevice)
 ## Flags for Execution
 DoPlots=0       # 1 does the Plots, something else doen't
 DoBoxplots=1    # 1 does the BoxPlots, something else doen't
-DivideThroughSize = 0 # Divide the acinar volumes through the size of the RUL from Datenblattstefan.xls
+DivideThroughSize = 1 # Divide the acinar volumes through the size of the RUL from Datenblattstefan.xls
 
 ## Initialize Variables
 Time <- format(Sys.time(), "%d.%b %H:%M")
@@ -93,15 +93,17 @@ for (currentDay in 1:length(Days)) { # Iterate trough the days
             cat("Working on sheet ",SheetNames[currentSheet]," (",currentSheet,"/",length(SheetNames),")\n",sep="")
             Data <- read.xls(FileLocation,sheet=currentSheet) # read Sheet Nr. i
             ConcatenatedVolumes[1:length(Data$Volume),currentSheet] = Data$Volume # put just read Data into ith column of Array
+            # write.table(ConcatenatedVolumes,"ConcatenatedVolumesNormal.csv",sep=";")
             # Divide through the size of the single RUL, as specified by Stefan
             if (DivideThroughSize == 1) {
                 ConcatenatedVolumes[,currentSheet]=ConcatenatedVolumes[,currentSheet]/StefansVolumes[currentSheet,currentDay]
-                cat(
-                    "Day:",currentDay,
-                    "|Sheet:",currentSheet,
-                    "|Stefans Volume:",StefansVolumes[currentSheet,currentDay],
-                    "|Our mean volume:",Mean[currentSheet],"\n",sep="")
+                # write.table(ConcatenatedVolumes,"ConcatenatedVolumesDivided.csv",sep=";")
             } # endif DivideThroughSize
+            cat(
+                "Day:",currentDay,
+                "|Sheet:",currentSheet,
+                "|Stefans Volume:",StefansVolumes[currentSheet,currentDay],
+                "|Our mean volume:",Mean[currentSheet],"\n",sep="")
             TotalVolumes[1:length(c(ConcatenatedVolumes)),currentDay] <- c(ConcatenatedVolumes)
             GlobalMean[currentDay] = mean(TotalVolumes[,currentDay],na.rm=TRUE)
             if (DivideThroughSize == 1) {        
@@ -181,7 +183,9 @@ boxplot(TotalVolumes,
 
 cat("---\n")
 
+## Put in for weeding out the COMBINED Outliers from Files in "NodeHeight2-WithoutOutliers"
 for (i in 1:5) {
-    boxplot(TotalVolumes[,i],notch=TRUE,main=i)
+ boxplot(TotalVolumes[,i],notch=TRUE,main=i)
 }
-sort(TotalVolumes[,2],decreasing=TRUE)
+
+sort(ConcatenatedVolumes[,4],decreasing=TRUE)*StefansMeanVolumes[4]
