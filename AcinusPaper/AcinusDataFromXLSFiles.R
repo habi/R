@@ -25,7 +25,7 @@ Mean <- NaN
 GlobalMean <- NaN
 NumberOfCounts <- NaN
 NumberOfAcini <- NaN
-TotalVolumes = array(NaN,c(700,length(Days))) # Initialize (huge empty) Array for TotalVolumes so we can fill it later
+TotalVolumes = array(NaN,c(700,length(Days))) # Initialize (huge and empty) Array for TotalVolumes so we can fill it later
 
 # Days <- 04
 # Days <- 10
@@ -99,18 +99,28 @@ for (currentDay in 1:length(Days)) { # Iterate trough the days
                 ConcatenatedVolumes[,currentSheet]=ConcatenatedVolumes[,currentSheet]/StefansVolumes[currentSheet,currentDay]
                 # write.table(ConcatenatedVolumes,"ConcatenatedVolumesDivided.csv",sep=";")
             } # endif DivideThroughSize
-            cat(
-                "Day:",currentDay,
+            cat("Day:",currentDay,
                 "|Sheet:",currentSheet,
                 "|Stefans Volume:",StefansVolumes[currentSheet,currentDay],
                 "|Our mean volume:",Mean[currentSheet],"\n",sep="")
             TotalVolumes[1:length(c(ConcatenatedVolumes)),currentDay] <- c(ConcatenatedVolumes)
             GlobalMean[currentDay] = mean(TotalVolumes[,currentDay],na.rm=TRUE)
             if (DivideThroughSize == 1) {        
+                cat("\n")
+                cat("\n")
+                cat("-------------------------------------------------------------------------\n")
+                cat("Dividing GlobalMean[Day] (",GlobalMean[currentDay],
+                    ") through mean(StefansVolumesDay[,Day]) (",mean(StefansVolumes[,currentDay]),
+                    "). The current Day is ",currentDay,"\n",sep="")
+                cat("-------------------------------------------------------------------------\n")
+                cat("\n")
+                cat("\n")
                 GlobalMean[currentDay] = GlobalMean[currentDay]/mean(StefansVolumes[,currentDay])
             }
         } # end iterate through sheets
-        BoxPlotTitle <- paste(FileName,"| total Acini:", sum(NumberOfAcini), "| global Mean:", sprintf("%.4f", mean(Mean,na.rm=TRUE)), "|", Time, "\n")
+        BoxPlotTitle <- paste(FileName,
+            "| total Acini:", sum(NumberOfAcini),
+            "| global Mean:", sprintf("%.4f", mean(Mean,na.rm=TRUE)),"\n")
         boxplot(ConcatenatedVolumes,
             notch=TRUE,
             varwidth=TRUE,
@@ -122,6 +132,8 @@ for (currentDay in 1:length(Days)) { # Iterate trough the days
         cat("---\n")
     } # endif DoBoxplots
 } # end iterate through Days
+
+summary(ConcatenatedVolumes)
 
 # Plot Increase
 Increase <- GlobalMean/GlobalMean[1]
@@ -174,7 +186,7 @@ boxplot(TotalVolumes,
   varwidth=TRUE,
   notch=TRUE,
   col="lightgray",
-  main="Boxplot of combined Acinar Volumes of all measurements",
+  main="Boxplot of pooled Acinar Volumes of all measurements",
   xlab="Days after birth",
   names=c(4,10,21,36,60)
   )
@@ -183,9 +195,11 @@ boxplot(TotalVolumes,
 
 cat("---\n")
 
-## Put in for weeding out the COMBINED Outliers from Files in "NodeHeight2-WithoutOutliers"
+## Put in for weeding out the POOLED Outliers
 for (i in 1:5) {
  boxplot(TotalVolumes[,i],notch=TRUE,main=i)
 }
+sort(ConcatenatedVolumes[,4],decreasing=TRUE)#*StefansMeanVolumes[4]
+sort(TotalVolumes[,2],decreasing=TRUE)
 
-sort(ConcatenatedVolumes[,4],decreasing=TRUE)*StefansMeanVolumes[4]
+summary(TotalVolumes) # give out Quantliles and other interesting stuff
