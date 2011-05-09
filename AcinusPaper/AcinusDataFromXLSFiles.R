@@ -17,11 +17,13 @@ require(tikzDevice)
 DoPlots=0       # 1 does the Plots, something else doen't
 DoBoxplots=1    # 1 does the BoxPlots, something else doen't
 DivideThroughSize = 0 # Divide the acinar volumes through the size of the RUL from Datenblattstefan.xls
+PrintToTikZ = 0 # Save Final BoxPlot in TeX-Output
 
 ## Initialize Variables
 Time <- format(Sys.time(), "%d.%b %H:%M")
 Days <- c(04,10,21,36,60)
-Mean <- NaN
+Mean = array(NaN,c(5,5))
+Median = array(NaN,c(5,5))
 GlobalMean <- NaN
 NumberOfCounts <- NaN
 NumberOfAcini <- NaN
@@ -63,26 +65,27 @@ for (currentDay in 1:length(Days)) { # Iterate trough the days
     for (currentSheet in 1:length(SheetNames)) { # Iterate through every sheet in the current XLS-File
 #         cat("reading Sheet #",currentSheet," named '",SheetNames[currentSheet],"'\n",sep="")
         Data <- read.xls(FileLocation,sheet=currentSheet) # read Sheet Nr. "currentSheet"
-        Mean[currentSheet] <- mean(Data$Volume,na.rm=TRUE) # Calculate the arithmetic mean without the empty cells and save into current Mean
+        Mean[currentSheet,currentDay] <- mean(Data$Volume,na.rm=TRUE) # Calculate the arithmetic mean without the empty cells and save into current Mean
+        Median[currentSheet,currentDay] <- median(Data$Volume,na.rm=TRUE) # Calculate the median without the empty cells and save into current Median
         NumberOfCounts[currentSheet] <- length(Data$Volume)
         NumberOfAcini[currentSheet] <- length(na.exclude(Data$Volume))
-        if (!is.nan(Mean[currentSheet])) { # Plot the Data for Acini where we actually have Data (i.e., where Mean[currentSheet] is not empty)
+        if (!is.nan(Mean[currentSheet,currentDay])) { # Plot the Data for Acini where we actually have Data (i.e., where Mean[currentSheet,currentDay] is not empty)
             if (DoPlots==1) {
                 plot(Data$Volume,type="b",col="red")
                 PlotTitle <- paste(
                     SheetNames[currentSheet],"|",
                     NumberOfAcini[currentSheet],
-                    "Acini | Mean:",sprintf("%.4f", Mean[currentSheet]), "\n")
-                abline(h=Mean[currentSheet], col = "gray60") # Plot Mean[currentSheet]
+                    "Acini | Mean:",sprintf("%.4f", Mean[currentSheet,currentDay]), "\n")
+                abline(h=Mean[currentSheet,currentDay], col = "gray60") # Plot Mean[currentSheet,currentDay]
                 title(PlotTitle)
             }
             cat("For", SheetNames[currentSheet], "we counted",
                 NumberOfAcini[currentSheet], "Acini with a mean volume of",
-                Mean[currentSheet], "(and omitted",sum(is.na(Data$Volume)),"empty counts).\n") # Give out something to read in the console
-        } # end if Mean[currentSheet] is not empty
-        if (is.nan(Mean[currentSheet])) { # if Mean[currentSheet] is empty, we probably have an empty Sheet...
+                Mean[currentSheet,currentDay], "(and omitted",sum(is.na(Data$Volume)),"empty counts).\n") # Give out something to read in the console
+        } # end if Mean[currentSheet,currentDay] is not empty
+        if (is.nan(Mean[currentSheet,currentDay])) { # if Mean[currentSheet,currentDay] is empty, we probably have an empty Sheet...
             cat("For", SheetNames[currentSheet], "we counted no Acini, which means that the sheet is probably emtpy.\n")
-        } # end if Mean[currentSheet] *is* empty
+        } # end if Mean[currentSheet,currentDay] *is* empty
     } # end iterate through sheets
 
     cat("---\n")    
@@ -99,37 +102,32 @@ for (currentDay in 1:length(Days)) { # Iterate trough the days
                 cat("Dividing ConcatenatedVolumes[,",currentSheet,currentDay,"]",
                     "through StefanStefansVolumes[",currentSheet,",",currentDay,"]\n",sep="")
                 ConcatenatedVolumes[,currentSheet,currentDay]=ConcatenatedVolumes[,currentSheet,currentDay]/StefansVolumes[currentSheet,currentDay]
+                Mean[currentSheet,currentDay] = Mean[currentSheet,currentDay]/StefansVolumes[currentSheet,currentDay]
+                Median[currentSheet,currentDay] = Median[currentSheet,currentDay]/StefansVolumes[currentSheet,currentDay]
                 cat("-------------------------------------------------------------------------\n")
             } # endif DivideThroughSize
             cat("Day:",currentDay,
                 "|Sheet:",currentSheet,
-                "|Our mean volume:",Mean[currentSheet],
+                "|Our mean volume:",Mean[currentSheet,currentDay],
                 "|Stefans Volume:",StefansVolumes[currentSheet,currentDay],"\n",sep="")
             TotalVolumes[1:length(c(ConcatenatedVolumes[,,currentDay])),currentDay] <- c(ConcatenatedVolumes[,,currentDay])
             GlobalMean[currentDay] = mean(TotalVolumes[,currentDay],na.rm=TRUE)
-#             if (DivideThroughSize == 1) {        
-#                 cat("-------------------------------------------------------------------------\n")
-#                 cat("Dividing GlobalMean[",currentDay,"] (",GlobalMean[currentDay],
-#                     ") through mean(StefansVolumesDay[,",currentDay,"]) (",mean(StefansVolumes[,currentDay]),
-#                     ").\n",sep="")
-#                 GlobalMean[currentDay] = GlobalMean[currentDay]/mean(StefansVolumes[,currentDay])
-#                 cat("-------------------------------------------------------------------------\n")
-#             }
         } # end iterate through sheets
         BoxPlotTitle <- paste(FileName,
             "| total Acini:", sum(NumberOfAcini),
-            "| global Mean:", sprintf("%.4f", mean(Mean,na.rm=TRUE)),"\n")
+            "| global Mean:", sprintf("%.4f", mean(Mean[,currentDay],na.rm=TRUE)),"\n")
         boxplot(ConcatenatedVolumes[,,currentDay],
             notch=TRUE,
             varwidth=TRUE,
             col="lightgray",
             outline=TRUE, # Plot plot outliers
-#             names=sprintf("%.4f",Mean),
             names=SheetNames,
             main=BoxPlotTitle)
-        abline(h=GlobalMean[currentDay], col = "red")
-        plot(c(1:5),Mean,col="red") # Plot Means
-        text(c(1:5),Mean,sprintf("%.4f",Mean),cex=0.6, pos=4, col="red") # Print Means in Plots, at the Position of the Means!
+        abline(h=GlobalMean[currentDay], col = "green")
+        points(c(1:5),Mean[,currentDay],col="red") # Plot Means
+        text(c(1:5),Mean[,currentDay],sprintf("%.4f",Mean[,currentDay]), pos=4, col="red") # Print Means in Plots, at the Position of the Means!
+        points(c(1:5)+.33,Median[,currentDay],col="blue") # Plot Medians
+        text(c(1:5)+.33,Median[,currentDay],sprintf("%.4f",Median[,currentDay]),cex=1, pos=4, col="blue") # Print Medians in Plots, at the Position of the Medians!
         cat("---\n")
     } # endif DoBoxplots
 } # end iterate through Days
@@ -180,37 +178,54 @@ legend(list(x=50,y=5),legend = c("RLL","Acini"),pch=1:2,lty=1,col=c("blue","red"
 cat("Our increase is: ",sprintf("%.3f", Increase),"\n")
 cat("Stefans increase is: ",sprintf("%.3f", StefansIncrease),"\n")
 
-# tikz('_AcinarBoxPlots.tex', standAlone = TRUE)
+if ( PrintToTikZ == 1 ) {
+    if (DivideThroughSize == 1) {
+        tikz('_BoxPlotNormalized.tex', standAlone = TRUE)
+        } else {
+            tikz('_BoxPlot.tex', standAlone = TRUE)
+        }
+    }
 boxplot(TotalVolumes,
   varwidth=TRUE,
   notch=TRUE,
   col="lightgray",
   names=Days,
-  #main="Boxplot of pooled Acinar Volumes of all measurements",
-  #xlab="Days after birth",
+  main="Boxplot of pooled Acinar Volumes of all measurements",
+  xlab="Days after birth",
   )
-# dev.off()
-# cat("Saved Boxplot to _AcinarBoxPlots.tex in",getwd(),"\n")
+if ( PrintToTikZ == 1 ) {  
+    dev.off()
+    cat("Saved Boxplot to _BoxPlot.tex in",getwd(),"\n")
+}
 
 cat("---\n")
 
-## Put in for weeding out the POOLED Outliers
+# ## Put in for weeding out the POOLED Outliers
 # for (i in 1:5) {
 #  boxplot(TotalVolumes[,i],notch=TRUE,main=i)
 # }
-# sort(ConcatenatedVolumes[,2,XXXX],decreasing=TRUE)
+# sort(ConcatenatedVolumes[,,3],decreasing=TRUE)
 # sort(TotalVolumes[,2],decreasing=TRUE)
+summary(TotalVolumes) # give out Quantliles and other interesting stuff
+
+if (DivideThroughSize == 1) {
+        write.table(Mean,"_MeansNormalized.csv",sep=";")
+        write.table(Median,"_MediansNormalized.csv",sep=";")
+        write.table(TotalVolumes,"_TotalVolumesNormalized.csv",sep=";")
+    } else {
+        write.table(Mean,"_Means.csv",sep=";")
+        write.table(Median,"_Medians.csv",sep=";")
+        write.table(TotalVolumes,"_TotalVolumes.csv",sep=";")
+    }
+
+# summary(ConcatenatedVolumes[,,1])
+# summary(ConcatenatedVolumes[,,2])
+# summary(ConcatenatedVolumes[,,3])
+# summary(ConcatenatedVolumes[,,4])
+# summary(ConcatenatedVolumes[,,5])
 # 
-# summary(TotalVolumes) # give out Quantliles and other interesting stuff
-
-summary(ConcatenatedVolumes[,,1])
-summary(ConcatenatedVolumes[,,2])
-summary(ConcatenatedVolumes[,,3])
-summary(ConcatenatedVolumes[,,4])
-summary(ConcatenatedVolumes[,,5])
-
-t.test(ConcatenatedVolumes[,,1])
-t.test(ConcatenatedVolumes[,,2])
-t.test(ConcatenatedVolumes[,,3])
-t.test(ConcatenatedVolumes[,,4])
-t.test(ConcatenatedVolumes[,,5])
+# t.test(ConcatenatedVolumes[,,1])
+# t.test(ConcatenatedVolumes[,,2])
+# t.test(ConcatenatedVolumes[,,3])
+# t.test(ConcatenatedVolumes[,,4])
+# t.test(ConcatenatedVolumes[,,5])
