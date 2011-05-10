@@ -8,16 +8,23 @@
 
 rm(list=ls()) # clear EVERYTHING!
 
-setwd("p:/doc/#R/AcinusPaper")
+WINDOWS = 1
+rgb(156,189,222,max=255) # UnibeColor -> "#9CBDDE"
+
+if (WINDOWS) {
+  setwd("p:/doc/#R/AcinusPaper")
+  } else {
+  setwd("/Volumes/doc/#R/AcinusPaper")
+  }
+
 library(gdata) # needed to read XLS-Files (needs an installation of PERL: http://www.perl.org/get.html)
-library(outliers)
 require(tikzDevice)
 
 ## Flags for Execution
 DoPlots=0       # 1 does the Plots, something else doen't
 DoBoxplots=1    # 1 does the BoxPlots, something else doen't
-DivideThroughSize = 0 # Divide the acinar volumes through the size of the RUL from Datenblattstefan.xls
-PrintToTikZ = 0 # Save Final BoxPlot in TeX-Output
+DivideThroughSize = 1 # Divide the acinar volumes through the size of the RUL from Datenblattstefan.xls
+SaveAsPNG = 1 # Save Output as PNG
 
 ## Initialize Variables
 Time <- format(Sys.time(), "%d.%b %H:%M")
@@ -29,8 +36,8 @@ NumberOfCounts <- NaN
 NumberOfAcini <- NaN
 ConcatenatedVolumes = array(NaN,c(200,5,5)) # Initialize Array for Volumes (200 counts, 5 Animals per Day, 5 Days)
 TotalVolumes = array(NaN,c(1000,length(Days))) # Initialize (huge and empty) Array for TotalVolumes so we can fill it later (1000=200x5)
+PlotColors <- c("blue","red","green")
 
-# Days <- 04
 # Days <- 10
 # Days <- 21
 # Days <- 36
@@ -57,7 +64,11 @@ for (currentDay in 1:length(Days)) { # Iterate trough the days
     Day <- sprintf("%02.0f", Days[currentDay]) # Construct and format the 'Day' nicely, so we can read the Filenames correctly
     cat("Working on Data from Day", Day, "\n")
     FileName <- paste("R108C",Day,".xls",sep="")
-    FileLocation <- paste("p:/doc/#Tables/AcinarTreeExtraction/",FileName,sep="")
+    if (WINDOWS) {
+      FileLocation <- paste("p:/doc/#Tables/AcinarTreeExtraction/",FileName,sep="")
+      } else {
+      FileLocation <- paste("//Volumes/doc/#Tables/AcinarTreeExtraction/",FileName,sep="")
+      }
     SheetNames <- sheetNames(FileLocation) # Extract Names of the single Sheets in the XLS-Files
     cat("---\n")
     ## In a first loop, read out all the sheets in the file and plot the volume data
@@ -71,7 +82,7 @@ for (currentDay in 1:length(Days)) { # Iterate trough the days
         NumberOfAcini[currentSheet] <- length(na.exclude(Data$Volume))
         if (!is.nan(Mean[currentSheet,currentDay])) { # Plot the Data for Acini where we actually have Data (i.e., where Mean[currentSheet,currentDay] is not empty)
             if (DoPlots==1) {
-                plot(Data$Volume,type="b",col="red")
+                plot(Data$Volume,type="b",col=PlotColord[1])
                 PlotTitle <- paste(
                     SheetNames[currentSheet],"|",
                     NumberOfAcini[currentSheet],
@@ -123,16 +134,18 @@ for (currentDay in 1:length(Days)) { # Iterate trough the days
             outline=TRUE, # Plot plot outliers
             names=SheetNames,
             main=BoxPlotTitle)
-        abline(h=GlobalMean[currentDay], col = "green")
-        points(c(1:5),Mean[,currentDay],col="red") # Plot Means
-        text(c(1:5),Mean[,currentDay],sprintf("%.4f",Mean[,currentDay]), pos=4, col="red") # Print Means in Plots, at the Position of the Means!
-        points(c(1:5)+.33,Median[,currentDay],col="blue") # Plot Medians
-        text(c(1:5)+.33,Median[,currentDay],sprintf("%.4f",Median[,currentDay]),cex=1, pos=4, col="blue") # Print Medians in Plots, at the Position of the Medians!
+        abline(h=GlobalMean[currentDay], col = PlotColors[3])
+        points(c(1:5),Mean[,currentDay],col=PlotColors[1]) # Plot Means
+        text(c(1:5),Mean[,currentDay],sprintf("%.4f",Mean[,currentDay]), pos=4,col=PlotColors[1]) # Print Means in Plots, at the Position of the Means!
+        points(c(1:5)+.33,Median[,currentDay],col=PlotColors[2]) # Plot Medians
+        text(c(1:5)+.33,Median[,currentDay],sprintf("%.4f",Median[,currentDay]),cex=1, pos=4,col=PlotColors[2]) # Print Medians in Plots, at the Position of the Medians!
         cat("---\n")
     } # endif DoBoxplots
 } # end iterate through Days
 
-# Plot Increase
+Mean.SD <- sd(Mean,na.rm=TRUE)
+
+# Calculate Increase
 Increase <- GlobalMean/GlobalMean[1]
 
 # Stefans Data
@@ -143,61 +156,124 @@ StefansMeanVolumes <- c(
     mean(StefansVolumes[,4]),
     mean(StefansVolumes[,5])) # RUL from Datenblattstefan.xls
 StefansIncrease <- StefansMeanVolumes / StefansMeanVolumes[1] # from p:\doc\#R\AcinusPaper\Datenblattstefan.xls (-> MEAN "rul")
+Stefans.SD <- sd(StefansVolumes,na.rm=TRUE)
 
+## Do the Plots
+# Plot Mean Volumes
+if ( SaveAsPNG == 1 ) {
+  if (DivideThroughSize == 1) {png(filename = "_VolumesAciniNormalized.png",width = 800, height = 600, units = "px",bg = "#9CBDDE")}
+  else {png(filename = "_VolumesAcini.png",width = 800, height = 600, units = "px",bg = "#9CBDDE")}
+}
+plot(Days,GlobalMean,
+    #main=Mean Acinar Volumes",
+    ylim=c(0,0.095),
+    type="b",
+    col=PlotColors[1],
+    pch=20,cex=3,lwd=3,
+    xlab="Days",
+    ylab=expression("Volume  " (cm^3)),
+    )
+for (i in 1:5) {
+    points(c(Days[i],Days[i],Days[i],Days[i],Days[i]), Mean[,i],col=PlotColors[1])
+}
+arrows(Days,GlobalMean-Mean.SD,Days,GlobalMean+Mean.SD, code = 3,col=PlotColors[1])
+if (SaveAsPNG == 1) {dev.off()}
+
+# Plot Stefans Volumes
+if ( SaveAsPNG == 1 ) {
+  if (DivideThroughSize == 1) {png(filename = "_VolumesStefanNormalized.png",width = 800, height = 600, units = "px",bg = "#9CBDDE")}
+  else {png(filename = "_VolumesStefan.png",width = 800, height = 600, units = "px",bg = "#9CBDDE")}
+}
+plot(Days,StefansMeanVolumes,
+    #main="Mean RLL Volumes",
+    ylim=c(0,3.25),
+    type="b",
+    col=PlotColors[2],
+    pch=16,cex=3,lwd=3,
+    xlab="Days",
+    ylab=expression("Volume  " (cm^3)),
+    )
+for (i in 1:5) {
+    points(c(Days[i],Days[i],Days[i],Days[i],Days[i]),StefansVolumes[,i],col=PlotColors[2])
+}
+arrows(Days,StefansMeanVolumes-Stefans.SD,Days,StefansMeanVolumes+Stefans.SD, code = 3, col = PlotColors[2])
+if (SaveAsPNG == 1) {dev.off()}
+    
 ## Plot Increase
-# Plot Acinar Increase
+if ( SaveAsPNG == 1 ) {
+  if (DivideThroughSize == 1) {png(filename = "_IncreaseAciniNormalized.png",width = 800, height = 600, units = "px",bg = "#9CBDDE")}
+  else {png(filename = "_IncreaseAcini.png",width = 800, height = 600, units = "px",bg = "#9CBDDE")}
+}
 plot(Days,Increase,
-  type="b",
-#   ylim=c(0,1),
-  main="Increase of Volumes compared to Day 4",
-  xlab="Days",
-  ylab="Increase",
-  pch=2,
-  col="red")
-# Plot both increases (Stefan and ours)
+    #main="Increase of Acinar Volumes compared to Day 4",
+    type="b",
+    pch=16,cex=3,lwd=3,
+    xlab="Days",
+    ylab="Increase",
+    col=PlotColors[1])
+if (SaveAsPNG == 1) {dev.off()}
+    
+## Plot Stefans Increase
+if ( SaveAsPNG == 1 ) {
+  if (DivideThroughSize == 1) {png(filename = "_IncreaseStefanNormalized.png",width = 800, height = 600, units = "px",bg = "#9CBDDE")}
+  else {png(filename = "_IncreaseStefan.png",width = 800, height = 600, units = "px",bg = "#9CBDDE")}
+}
 plot(Days,StefansIncrease,
-  ylim=c(0,max(max(Increase),max(StefansIncrease))),
-  type="b",
-  main="Increase of Volumes compared to Day 4",
-  xlab="Days",
-  ylab="Increase",
-  pch=1,
-  col="blue")
-par(new=TRUE) # actually don't make a new plot    O.o
+    #main="Increase of RLL Volumes compared to Day 4",
+    type="b",
+    pch=15,cex=3,lwd=3,
+    col=PlotColors[2],
+    xlab="Days",
+    ylab="Increase",
+    )
+if (SaveAsPNG == 1) {dev.off()}
+
+## Plot both increases in the same Plot
+if ( SaveAsPNG == 1 ) {
+  if (DivideThroughSize == 1) {png(filename = "_IncreaseCombinedNormalized.png",width = 800, height = 600, units = "px",bg = "#9CBDDE")}
+  else {png(filename = "_IncreaseCombined.png",width = 800, height = 600, units = "px",bg = "#9CBDDE")}
+}
 plot(Days,Increase,
-  ylim=c(0,max(max(Increase),max(StefansIncrease))),
-  type="b",
-  axes=FALSE,
-  main="",
-  xlab="",
-  ylab="",
-  pch=2,
-  col="red")
-legend(list(x=50,y=5),legend = c("RLL","Acini"),pch=1:2,lty=1,col=c("blue","red"))
+    #main="Increase of Volumes compared to Day 4",
+    ylim=c(0,max(max(Increase),max(StefansIncrease))),
+    type="b",
+    pch=16,cex=3,lwd=3,
+    col=PlotColors[1],
+    xlab="Days",
+    ylab="Increase",
+    )
+par(new=TRUE) # actually don't make a new plot    O.o
+plot(Days,StefansIncrease,
+    ylim=c(0,max(max(Increase),max(StefansIncrease))),
+    type="b",
+    pch=15,cex=3,lwd=3,
+    axes=FALSE,
+    main="",
+    xlab="",
+    ylab="",
+    col=PlotColors[2])
+legend(list(x=50,y=5),legend = c("Acini","RLL"),pch=16:15,lty=1,col=c(PlotColors[1],PlotColors[2]))
+if (SaveAsPNG == 1) {dev.off()}
 
 cat("Our increase is: ",sprintf("%.3f", Increase),"\n")
 cat("Stefans increase is: ",sprintf("%.3f", StefansIncrease),"\n")
 
-if ( PrintToTikZ == 1 ) {
-    if (DivideThroughSize == 1) {
-        tikz('_BoxPlotNormalized.tex', standAlone = TRUE)
-        } else {
-            tikz('_BoxPlot.tex', standAlone = TRUE)
-        }
-    }
+## Save BoxPlot
+if ( SaveAsPNG == 1 ) {
+  if (DivideThroughSize == 1) {png(filename = "_BoxPlotNormalized.png",width = 800, height = 600, units = "px",bg = "#9CBDDE")}
+  else {png(filename = "_BoxPlot.png",width = 800, height = 600, units = "px",bg = "#9CBDDE")}
+}
 boxplot(TotalVolumes,
   varwidth=TRUE,
   notch=TRUE,
   col="lightgray",
   names=Days,
-  main="Boxplot of pooled Acinar Volumes of all measurements",
+  #%main="Boxplot of pooled Acinar Volumes of all measurements",
   xlab="Days after birth",
+  ylab=expression("Volume " (cm^3))
   )
-if ( PrintToTikZ == 1 ) {  
-    dev.off()
-    cat("Saved Boxplot to _BoxPlot.tex in",getwd(),"\n")
-}
-
+points(GlobalMean,col=PlotColors[2],cex=2,lwd=2)
+if (SaveAsPNG == 1) {dev.off()}
 cat("---\n")
 
 # ## Put in for weeding out the POOLED Outliers
@@ -206,7 +282,7 @@ cat("---\n")
 # }
 # sort(ConcatenatedVolumes[,,3],decreasing=TRUE)
 # sort(TotalVolumes[,2],decreasing=TRUE)
-summary(TotalVolumes) # give out Quantliles and other interesting stuff
+# summary(TotalVolumes) # give out Quantliles and other interesting stuff
 
 if (DivideThroughSize == 1) {
         write.table(Mean,"_MeansNormalized.csv",sep=";")
@@ -217,15 +293,3 @@ if (DivideThroughSize == 1) {
         write.table(Median,"_Medians.csv",sep=";")
         write.table(TotalVolumes,"_TotalVolumes.csv",sep=";")
     }
-
-# summary(ConcatenatedVolumes[,,1])
-# summary(ConcatenatedVolumes[,,2])
-# summary(ConcatenatedVolumes[,,3])
-# summary(ConcatenatedVolumes[,,4])
-# summary(ConcatenatedVolumes[,,5])
-# 
-# t.test(ConcatenatedVolumes[,,1])
-# t.test(ConcatenatedVolumes[,,2])
-# t.test(ConcatenatedVolumes[,,3])
-# t.test(ConcatenatedVolumes[,,4])
-# t.test(ConcatenatedVolumes[,,5])
