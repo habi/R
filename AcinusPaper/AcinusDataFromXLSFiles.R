@@ -18,13 +18,14 @@ if (WINDOWS) {
   }
 
 library(gdata) # needed to read XLS-Files (needs an installation of PERL: http://www.perl.org/get.html)
-require(tikzDevice)
 
 ## Flags for Execution
 DoPlots=0       # 1 does the Plots, something else doen't
 DoBoxplots=1    # 1 does the BoxPlots, something else doen't
 DivideThroughSize = 0 # Divide the acinar volumes through the size of the RUL from Datenblattstefan.xls
-SaveAsPDF = 1 # Save Output as PNG
+SaveAsPDF = 1 # Save Output as PDF
+PlotWidth = 5 #Size of the plots
+PlotHeight = 5 #Size of the plots
 
 ## Initialize Variables
 Time <- format(Sys.time(), "%d.%b %H:%M")
@@ -38,6 +39,7 @@ ConcatenatedVolumes = array(NaN,c(200,5,5)) # Initialize Array for Volumes (200 
 TotalVolumes = array(NaN,c(1000,length(Days))) # Initialize (huge and empty) Array for TotalVolumes so we can fill it later (1000=200x5)
 PlotColors <- c("blue","red","green","cyan","magenta")
 
+# Days <- 4
 # Days <- 10
 # Days <- 21
 # Days <- 36
@@ -128,8 +130,8 @@ for (currentDay in 1:length(Days)) { # Iterate trough the days
             "| total Acini:", sum(NumberOfAcini),
             "| global Mean:", sprintf("%.4f", mean(Mean[,currentDay],na.rm=TRUE)),"\n")
         if ( SaveAsPDF == 1 ) {
-            if (DivideThroughSize == 1) {pdf(file = paste("BoxPlotNormalized",sprintf("%02.0f", Days[currentDay]),".pdf",sep=""),width=8,height=5,bg = "transparent")}
-            else {pdf(file = paste("BoxPlot",sprintf("%02.0f", Days[currentDay]),".pdf",sep=""),width=8,height=5,bg = "transparent")}
+            if (DivideThroughSize == 1) {pdf(file = paste("BoxPlotNormalized",sprintf("%02.0f", Days[currentDay]),".pdf",sep=""),width=PlotWidth,height=PlotHeight,bg = "transparent")}
+            else {pdf(file = paste("BoxPlot",sprintf("%02.0f", Days[currentDay]),".pdf",sep=""),width=PlotWidth,height=PlotHeight,bg = "transparent")}
         }
         boxplot(ConcatenatedVolumes[,,currentDay],
             notch=TRUE,
@@ -142,7 +144,8 @@ for (currentDay in 1:length(Days)) { # Iterate trough the days
         points(c(1:5),Mean[,currentDay],col=PlotColors[1]) # Plot Means
         text(c(1:5),Mean[,currentDay],sprintf("%.4f",Mean[,currentDay]), pos=4,col=PlotColors[1]) # Print Means in Plots, at the Position of the Means!
         points(c(1:5)+.33,Median[,currentDay],col=PlotColors[2]) # Plot Medians
-        text(c(1:5)+.33,Median[,currentDay],sprintf("%.4f",Median[,currentDay]),cex=1, pos=4,col=PlotColors[2]) # Print Medians in Plots, at the Position of the Medians!
+        text(c(1:5)+.33,Median[,currentDay],sprintf("%.4f",Median[,currentDay]),cex=1, pos=4,col=PlotColors[2]) # Print Medians in Plots, at the Position of the Medians!    
+        text(c(1:5),0,NumberOfAcini,cex=1) # Print # of Acini in Plots!
         if (SaveAsPDF == 1) {dev.off()}
         cat("---\n")
     } # endif DoBoxplots
@@ -166,78 +169,77 @@ Stefans.SD <- sd(StefansVolumes,na.rm=TRUE)
 ## Do the Plots
 # Plot Mean Volumes
 if ( SaveAsPDF == 1 ) {
-  if (DivideThroughSize == 1) {pdf(file = "VolumesAciniNormalized.pdf",width=8,height=5,bg = "transparent")}
-  else {pdf(file = "VolumesAcini.pdf",width=8,height=5,bg = "transparent")}
+  if (DivideThroughSize == 1) {pdf(file = "VolumesAciniNormalized.pdf",width=PlotWidth,height=PlotHeight,bg = "transparent")}
+  else {pdf(file = "VolumesAcini.pdf",width=PlotWidth,height=PlotHeight,bg = "transparent")}
 }
 plot(Days,GlobalMean,
     #main=Mean Acinar Volumes",
     ylim=c(0,0.095),
     type="b",
     col=PlotColors[1],
-    pch=20,cex=3,lwd=3,
-    xlab="Tage",
-    ylab=expression("Volumen  " (cm^3)),
+    pch=16,cex=3,lwd=3,
+    xlab="Days",
+    ylab=expression("Volume  " (cm^3)),
     )
 for (i in 1:5) {
-    points(c(Days[i],Days[i],Days[i],Days[i],Days[i]), Mean[,i],col=PlotColors[1])
+    points(c(Days[i],Days[i],Days[i],Days[i],Days[i]), Mean[,i],col="black")#PlotColors[1])
 }
-arrows(Days,GlobalMean-Mean.SD,Days,GlobalMean+Mean.SD, code = 3,col=PlotColors[1])
+arrows(Days,GlobalMean-Mean.SD,Days,GlobalMean+Mean.SD, code = 3,col="black")#PlotColors[2])
 if (SaveAsPDF == 1) {dev.off()}
 
 # Plot Stefans Volumes
 if ( SaveAsPDF == 1 ) {
-  if (DivideThroughSize == 1) {pdf(file = "VolumesStefanNormalized.pdf",width=8,height=5,bg = "transparent")}
-  else {pdf(file = "VolumesStefan.pdf",width=8,height=5,bg = "transparent")}
+  if (DivideThroughSize == 1) {pdf(file = "VolumesStefanNormalized.pdf",width=PlotWidth,height=PlotHeight,bg = "transparent")}
+  else {pdf(file = "VolumesStefan.pdf",width=PlotWidth,height=PlotHeight,bg = "transparent")}
 }
-par(bg = "transparent")
 plot(Days,StefansMeanVolumes,
     #main="Mean RLL Volumes",
     ylim=c(0,3.25),
     type="b",
     col=PlotColors[2],
-    pch=16,cex=3,lwd=3,
-    xlab="Tage",
-    ylab=expression("Volumen  " (cm^3))
+    pch=15,cex=3,lwd=3,
+    xlab="Days",
+    ylab=expression("Volume  " (cm^3))
     )
 for (i in 1:5) {
-    points(c(Days[i],Days[i],Days[i],Days[i],Days[i]),StefansVolumes[,i],col=PlotColors[2])
+    points(c(Days[i],Days[i],Days[i],Days[i],Days[i]),StefansVolumes[,i],col="black")#PlotColors[2])
 }
-arrows(Days,StefansMeanVolumes-Stefans.SD,Days,StefansMeanVolumes+Stefans.SD, code = 3, col = PlotColors[2])
+arrows(Days,StefansMeanVolumes-Stefans.SD,Days,StefansMeanVolumes+Stefans.SD, code = 3, col="black")#PlotColors[2])
 if (SaveAsPDF == 1) {dev.off()}
     
 ## Plot Increase
 if ( SaveAsPDF == 1 ) {
-  if (DivideThroughSize == 1) {pdf(file = "IncreaseAciniNormalized.pdf",width=8,height=5,bg = "transparent")}
-  else {pdf(file = "IncreaseAcini.pdf",width=8,height=5,bg = "transparent")}
+  if (DivideThroughSize == 1) {pdf(file = "IncreaseAciniNormalized.pdf",width=PlotWidth,height=PlotHeight,bg = "transparent")}
+  else {pdf(file = "IncreaseAcini.pdf",width=PlotWidth,height=PlotHeight,bg = "transparent")}
 }
 plot(Days,Increase,
     #main="Increase of Acinar Volumes compared to Day 4",
     type="b",
     pch=16,cex=3,lwd=3,
-    xlab="Tage",
-    ylab="Zunahme",
+    xlab="Days",
+    ylab="Increase",
     col=PlotColors[1])
 if (SaveAsPDF == 1) {dev.off()}
     
 ## Plot Stefans Increase
 if ( SaveAsPDF == 1 ) {
-  if (DivideThroughSize == 1) {pdf(file = "IncreaseStefanNormalized.pdf",width=8,height=5,bg = "transparent")}
-  else {pdf(file = "IncreaseStefan.pdf",width=8,height=5,bg = "transparent")}
+  if (DivideThroughSize == 1) {pdf(file = "IncreaseStefanNormalized.pdf",width=PlotWidth,height=PlotHeight,bg = "transparent")}
+  else {pdf(file = "IncreaseStefan.pdf",width=PlotWidth,height=PlotHeight,bg = "transparent")}
 }
 plot(Days,StefansIncrease,
     #main="Increase of RLL Volumes compared to Day 4",
     type="b",
     pch=15,cex=3,lwd=3,
     col=PlotColors[2],
-    xlab="Tage",
-    ylab="Zunahme",
+    xlab="Days",
+    ylab="Increase",
     )
 if (SaveAsPDF == 1) {dev.off()}
 
 ## Plot both increases in the same Plot
 if ( SaveAsPDF == 1 ) {
-  if (DivideThroughSize == 1) {pdf(file = "IncreaseCombinedNormalized.pdf",width=8,height=5,bg = "transparent")}
-  else {pdf(file = "IncreaseCombined.pdf",width=8,height=5,bg = "transparent")}
+  if (DivideThroughSize == 1) {pdf(file = "IncreaseCombinedNormalized.pdf",width=PlotWidth,height=PlotHeight,bg = "transparent")}
+  else {pdf(file = "IncreaseCombined.pdf",width=PlotWidth,height=PlotHeight,bg = "transparent")}
 }
 plot(Days,Increase,
     #main="Increase of Volumes compared to Day 4",
@@ -245,8 +247,8 @@ plot(Days,Increase,
     type="b",
     pch=16,cex=3,lwd=3,
     col=PlotColors[1],
-    xlab="Tage",
-    ylab="Zunahme",
+    xlab="Days",
+    ylab="Increase",
     )
 par(new=TRUE) # actually don't make a new plot    O.o
 plot(Days,StefansIncrease,
@@ -266,8 +268,8 @@ cat("Stefans increase is: ",sprintf("%.3f", StefansIncrease),"\n")
 
 ## Save BoxPlot
 if ( SaveAsPDF == 1 ) {
-  if (DivideThroughSize == 1) {pdf(file = "BoxPlotNormalized.pdf",width=8,height=5,bg = "transparent")}
-  else {pdf(file = "BoxPlot.pdf",width=8,height=5,bg = "transparent")}
+  if (DivideThroughSize == 1) {pdf(file = "BoxPlotNormalized.pdf",width=PlotWidth,height=PlotHeight,bg = "transparent")}
+  else {pdf(file = "BoxPlot.pdf",width=PlotWidth,height=PlotHeight,bg = "transparent")}
 }
 boxplot(TotalVolumes,
   varwidth=TRUE,
@@ -275,51 +277,50 @@ boxplot(TotalVolumes,
   col="lightgray",
   names=Days,
   #%main="Boxplot of pooled Acinar Volumes of all measurements",
-  xlab="Tage nach Geburt",
-  ylab=expression("Volumen  " (cm^3))
+  xlab="Days after Birth",
+  ylab=expression("Volume  " (cm^3))
   )
 points(GlobalMean,col=PlotColors[2],cex=2,lwd=2)
 if (SaveAsPDF == 1) {dev.off()}
 cat("---\n")
 
-# ## Put in for weeding out the POOLED Outliers
+## Put in for weeding out the POOLED Outliers
 # for (i in 1:5) {
-#  boxplot(TotalVolumes[,i],notch=TRUE,main=i)
+#      boxplot(TotalVolumes[,i],notch=TRUE,main=i)
 # }
-# sort(ConcatenatedVolumes[,,3],decreasing=TRUE)
-# sort(TotalVolumes[,2],decreasing=TRUE)
+# sort(TotalVolumes[,3],decreasing=TRUE)
 # summary(TotalVolumes) # give out Quantliles and other interesting stuff
 
 ## Save out ALL the Volumes of the Acini in a Plot
-for (whichDay in 1) {
-     if ( SaveAsPDF == 1 ) {
-         if (DivideThroughSize == 1) {pdf(file = paste("TotalAciniNormalized",sprintf("%02.0f", Days[whichDay]),".pdf",sep=""),width=8,height=5,bg = "transparent")}
-         else {pdf(file = paste("TotalAcini",sprintf("%02.0f", Days[whichDay]),".pdf",sep=""),width=8,height=5,bg = "transparent")}
-     }
-    plot(na.omit(TotalVolumes[,whichDay]),
-        ylim=c(0,max(TotalVolumes,na.rm=TRUE)),
-        xlim=c(0,200),
-        pch=21,cex=3,lwd=2,
-        col=PlotColors[whichDay],
-        xlab="Azinus",
-        ylab=expression("Volumen  " (cm^3)))
-     if (SaveAsPDF == 1) {dev.off()}
-}
-for (whichDay in 2:length(Days)) {
-     if ( SaveAsPDF == 1 ) {
-         if (DivideThroughSize == 1) {pdf(file = paste("TotalAciniNormalized",sprintf("%02.0f", Days[whichDay]),".pdf",sep=""),width = 8, height = 5,,bg = "transparent")}
-         else {pdf(file = paste("TotalAcini",sprintf("%02.0f", Days[whichDay]),".pdf",sep=""),width = 10, height = 8,bg = "transparent")}
-     }
-    plot(na.omit(TotalVolumes[,whichDay]),
-        ylim=c(0,max(TotalVolumes,na.rm=TRUE)),
-        xlim=c(0,200),
-        pch=21,cex=3,lwd=2,
-        col=PlotColors[whichDay],
-        axes=FALSE,
-        xlab="",
-        ylab="")
-     if (SaveAsPDF == 1) {dev.off()}
-}
+# for (whichDay in 1) {
+#      if ( SaveAsPDF == 1 ) {
+#          if (DivideThroughSize == 1) {pdf(file = paste("TotalAciniNormalized",sprintf("%02.0f", Days[whichDay]),".pdf",sep=""),width=PlotWidth,height=PlotHeight,bg = "transparent")}
+#          else {pdf(file = paste("TotalAcini",sprintf("%02.0f", Days[whichDay]),".pdf",sep=""),width=PlotWidth,height=PlotHeight,bg = "transparent")}
+#      }
+#     plot(na.omit(TotalVolumes[,whichDay]),
+#         ylim=c(0,max(TotalVolumes,na.rm=TRUE)),
+#         xlim=c(0,200),
+#         pch=21,cex=3,lwd=2,
+#         col=PlotColors[whichDay],
+#         xlab="Azinus",
+#         ylab=expression("Volume  " (cm^3)))
+#      if (SaveAsPDF == 1) {dev.off()}
+# }
+# for (whichDay in 2:length(Days)) {
+#      if ( SaveAsPDF == 1 ) {
+#          if (DivideThroughSize == 1) {pdf(file = paste("TotalAciniNormalized",sprintf("%02.0f", Days[whichDay]),".pdf",sep=""),width=PlotWidth,height=PlotHeight,bg = "transparent")}
+#          else {pdf(file = paste("TotalAcini",sprintf("%02.0f", Days[whichDay]),".pdf",sep=""),width=PlotWidth,height=PlotHeight,bg = "transparent")}
+#      }
+#     plot(na.omit(TotalVolumes[,whichDay]),
+#         ylim=c(0,max(TotalVolumes,na.rm=TRUE)),
+#         xlim=c(0,200),
+#         pch=21,cex=3,lwd=2,
+#         col=PlotColors[whichDay],
+#         axes=FALSE,
+#         xlab="",
+#         ylab="")
+#      if (SaveAsPDF == 1) {dev.off()}
+# }
 
 if (DivideThroughSize == 1) {
         write.table(Mean,"MeansNormalized.csv",sep=";")
