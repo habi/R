@@ -24,8 +24,8 @@ DoPlots=0       # 1 does the Plots, something else doen't
 DoBoxplots=1    # 1 does the BoxPlots, something else doen't
 DivideThroughSize = 0 # Divide the acinar volumes through the size of the RUL from Datenblattstefan.xls
 SaveAsPDF = 1 # Save Output as PDF
-PlotWidth = 5 #Size of the plots
-PlotHeight = 5 #Size of the plots
+PlotWidth = 6 #Size of the plots
+PlotHeight = 4.5 #Size of the plots
 
 ## Initialize Variables
 Time <- format(Sys.time(), "%d.%b %H:%M")
@@ -140,12 +140,12 @@ for (currentDay in 1:length(Days)) { # Iterate trough the days
             outline=TRUE, # Plot plot outliers
             names=SheetNames,
             main=BoxPlotTitle)
-        abline(h=GlobalMean[currentDay], col = PlotColors[3])
-        points(c(1:5),Mean[,currentDay],col=PlotColors[1]) # Plot Means
-        text(c(1:5),Mean[,currentDay],sprintf("%.4f",Mean[,currentDay]), pos=4,col=PlotColors[1]) # Print Means in Plots, at the Position of the Means!
-        points(c(1:5)+.33,Median[,currentDay],col=PlotColors[2]) # Plot Medians
-        text(c(1:5)+.33,Median[,currentDay],sprintf("%.4f",Median[,currentDay]),cex=1, pos=4,col=PlotColors[2]) # Print Medians in Plots, at the Position of the Medians!    
-        text(c(1:5),0,NumberOfAcini,cex=1) # Print # of Acini in Plots!
+        # abline(h=GlobalMean[currentDay], col = PlotColors[3])
+        points(c(1:5),Mean[,currentDay],col=PlotColors[1],,pch=3,lwd=2) # Plot Means
+        # text(c(1:5),Mean[,currentDay],sprintf("%.4f",Mean[,currentDay]), pos=4,col=PlotColors[1]) # Print Means in Plots, at the Position of the Means!
+        # points(c(1:5)+.33,Median[,currentDay],col=PlotColors[2],pch=3,lwd=2) # Plot Medians
+        # text(c(1:5)+.33,Median[,currentDay],sprintf("%.4f",Median[,currentDay]),cex=1, pos=4,col=PlotColors[2]) # Print Medians in Plots, at the Position of the Medians!    
+        # text(c(1:5),0,NumberOfAcini,cex=1) # Print Number of Acini in Plots!
         if (SaveAsPDF == 1) {dev.off()}
         cat("---\n")
     } # endif DoBoxplots
@@ -179,7 +179,7 @@ plot(Days,GlobalMean,
     col=PlotColors[1],
     pch=16,cex=3,lwd=3,
     xlab="Days",
-    ylab=expression("Volume  " (cm^3)),
+    ylab=expression("Volume  " (ul)),
     )
 for (i in 1:5) {
     points(c(Days[i],Days[i],Days[i],Days[i],Days[i]), Mean[,i],col="black")#PlotColors[1])
@@ -199,7 +199,7 @@ plot(Days,StefansMeanVolumes,
     col=PlotColors[2],
     pch=15,cex=3,lwd=3,
     xlab="Days",
-    ylab=expression("Volume  " (cm^3))
+    ylab=expression("Volume  " (ul))
     )
 for (i in 1:5) {
     points(c(Days[i],Days[i],Days[i],Days[i],Days[i]),StefansVolumes[,i],col="black")#PlotColors[2])
@@ -278,9 +278,10 @@ boxplot(TotalVolumes,
   names=Days,
   #%main="Boxplot of pooled Acinar Volumes of all measurements",
   xlab="Days after Birth",
-  ylab=expression("Volume  " (cm^3))
+  ylab=expression("Volume  " (ul))
   )
-points(GlobalMean,col=PlotColors[2],cex=2,lwd=2)
+# points(GlobalMean,col=PlotColors[2],cex=2,lwd=2) # Circles
+points(GlobalMean,col=PlotColors[2],pch=3,lwd=2) # Cross
 if (SaveAsPDF == 1) {dev.off()}
 cat("---\n")
 
@@ -303,7 +304,7 @@ cat("---\n")
 #         pch=21,cex=3,lwd=2,
 #         col=PlotColors[whichDay],
 #         xlab="Azinus",
-#         ylab=expression("Volume  " (cm^3)))
+#         ylab=expression("Volume  " (ul)))
 #      if (SaveAsPDF == 1) {dev.off()}
 # }
 # for (whichDay in 2:length(Days)) {
