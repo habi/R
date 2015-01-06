@@ -8,92 +8,123 @@ output:
 ---
 
 # Introduction
-I tracked my location data with [OpenPaths](http://openpaths.cc) since a long time.
-To grab a .CSV file with your location data, log in to OpenPaths, and click on *CSV* under *Download my data*, which gives you a [comma separated] list of your location data, which can then visualize with [R](http://www.r-project.org), which is what we've done here.
+I tracked my location data with [OpenPaths](http://openpaths.cc) since the beginning of 2014.
+OpenPaths comes as an application for your phone, which tracks the its location, uploads it to the OpenPath servers, where you can donate your data for scientific research, and also look at the data yourself.
+
+To do this, we grab a .CSV file with the location data.
+Log in to OpenPaths, and click on *CSV* under *Download my data*, which gives you a [comma separated](http://en.wikipedia.org/wiki/Comma-separated_values) list of your location data, which can then visualize with [R](http://www.r-project.org), which is what we've done here.
 
 # Data
-To do the visualization, we load the CSV file and display a summary of the data like so
+We want to plot the location points on a map, which we can do with the wonderful [`ggmap`](http://cran.r-project.org/web/packages/ggmap/) library.
+First, we load the CSV file and display a summary of the data.
 ```{r load CSV}
+library(ggmap)
 data <- read.csv("openpaths_habi.csv")
 summary(data)
 ```
 
 We see that in 2014 I changed from an iPhone 4S ([`iPhone4,1`](http://www.everymac.com/ultimate-mac-lookup/?search_keywords=iPhone4,1)) to an iPhone 5S ([`iPhone6,2`](http://www.everymac.com/ultimate-mac-lookup/?search_keywords=iPhone6,2)) and went through at least 6 iOS version numbers.
 
-# Location
-
+# Location data
+## Extremes
 Interesting points in our data are
 
-  - The minimal and maximal latitudes of `r min(data$lat)` and `r max(data$lat)`, respectively.
-  - the minimal and maximal longitudes of `r min(data$lon)` to `r max(data$lon)`, respectively
+  - The minimal and maximal latitudes of `r min(data$lat)` and `r max(data$lat)`, South and North respectively.
+  - the minimal and maximal longitudes of `r min(data$lon)` to `r max(data$lon)`, East and West respectively
   - as well as the altitude, which ranges from `r min(data$alt)` [AMSL](https://en.wikipedia.org/wiki/Sea_level) to `r max(data$alt)` AMSL.
+  
+We can get the extreme points out of the data pretty easily.
+To do so, we `subset` the data depending on the value we want to have, construct a Location from these points, grab the map from that location, display this map and add a pointer.
 
+For the northmost point, this goes like so:
 ```{r where is the northmost point?}
-library(ggmap)
 NLocation = c(lon=subset(data, lat==max(data$lat))$lon[1],
               lat=subset(data, lat==max(data$lat))$lat[1])
 mapImage<- get_map(location= NLocation, source = 'google', maptype='roadmap', zoom=15)
-ggmap(mapImage) + geom_point(aes(x = subset(data, lat==max(data$lat))$lon[1],
-                                 y = subset(data, lat==max(data$lat))$lat[1]), alpha = .5, color="darkred", size = 10) + ggtitle('Northmost point in 2014')
+ggmap(mapImage) +
+  geom_point(aes(x = subset(data, lat==max(data$lat))$lon[1],
+                 y = subset(data, lat==max(data$lat))$lat[1]),
+             alpha = .5,
+             color="darkred",
+             size = 10) +
+  ggtitle('Northmost point in 2014')
 ````
+We see that in 2014 I was in [Hamburg](https://www.flickr.com/photos/habi/sets/72157645730536835/), which is the northmost point.
+Correctly, the northmost point would be in Oslo, where I spent New Years Eve 2013/2014, but I've only really started to use OpenPaths in mid-January 2014...
 
-```{r where is the most eastern point?}
-library(ggmap)
+The rest of the extremes can be extracted accordingly.
+
+```{r where is the most eastern point?, echo=FALSE, message=FALSE}
 ELocation = c(lon=subset(data, lon==max(data$lon))$lon[1],
               lat=subset(data, lon==max(data$lon))$lat[1])
 mapImage<- get_map(location= ELocation, source = 'google', maptype='roadmap', zoom=15)
-ggmap(mapImage) + geom_point(aes(x = subset(data, lon==max(data$lon))$lon[1],
-                                 y = subset(data, lon==max(data$lon))$lat[1]), alpha = .5, color="darkred", size = 10) + ggtitle('Most eastern point in 2014')
-````
+ggmap(mapImage) +
+  geom_point(aes(x = subset(data, lon==max(data$lon))$lon[1],
+                 y = subset(data, lon==max(data$lon))$lat[1]),
+             alpha = .5,
+             color="darkred",
+             size = 10) +
+  ggtitle('Most eastern point in 2014')
 
-```{r where is the southmost point?}
-library(ggmap)
 SLocation = c(lon=subset(data, lat==min(data$lat))$lon[1],
               lat=subset(data, lat==min(data$lat))$lat[1])
 mapImage<- get_map(location= SLocation, source = 'google', maptype='roadmap', zoom=15)
-ggmap(mapImage) + geom_point(aes(x = subset(data, lat==min(data$lat))$lon[1],
-                                 y = subset(data, lat==min(data$lat))$lat[1]), alpha = .5, color="darkred", size = 10) + ggtitle('Southmost point in 2014')
-````
+ggmap(mapImage) +
+  geom_point(aes(x = subset(data, lat==min(data$lat))$lon[1],
+                 y = subset(data, lat==min(data$lat))$lat[1]),
+             alpha = .5,
+             color="darkred",
+             size = 10) +
+  ggtitle('Southmost point in 2014')
 
-```{r where is the most western point?}
-library(ggmap)
 WLocation = c(lon=subset(data, lon==min(data$lon))$lon[1],
               lat=subset(data, lon==min(data$lon))$lat[1])
 mapImage<- get_map(location= WLocation, source = 'google', maptype='roadmap', zoom=15)
-ggmap(mapImage) + geom_point(aes(x = subset(data, lon==min(data$lon))$lon[1],
-                                 y = subset(data, lon==min(data$lon))$lat[1]), alpha = .5, color="darkred", size = 10) + ggtitle('Most eastern point in 2014')
+ggmap(mapImage) +
+  geom_point(aes(x = subset(data, lon==min(data$lon))$lon[1],
+                 y = subset(data, lon==min(data$lon))$lat[1]),
+             alpha = .5,
+             color="darkred",
+             size = 10) +
+  ggtitle('Most eastern point in 2014')
 ````
 
-```{r where is the highest point?}
-library(ggmap)
+The most eastern point was (unsurprisingly) in [Japan](https://www.flickr.com/photos/habi/sets/72157644608251866/), the most southern point in [Cyprus](https://www.flickr.com/photos/habi/sets/72157649175258515/) and the most eastern point in Amsterdam, while flying to Japan.
+
+The highest in 2014 was on the Bettmerhorn, while skiing.
+The lowest point at `r min(data$alt)` AMSL was at home and is probably a fluke in the GPS data :)
+
+```{r where is the highest point?, echo=FALSE, message=FALSE}
 HighestLocation = c(lon=subset(data, alt==max(data$alt))$lon[1],
                     lat=subset(data, alt==max(data$alt))$lat[1])
-mapImage<- get_map(location= HighestLocation, source = 'google', maptype='roadmap', zoom=15)
-ggmap(mapImage) + geom_point(aes(x = subset(data, alt==max(data$alt))$lon[1],
-                                 y = subset(data, alt==max(data$alt))$lat[1]), alpha = .5, color="darkred", size = 10) + ggtitle('Highest Point in 2014')
+mapImage<- get_map(location = HighestLocation,
+                   source = 'google',
+                   maptype='roadmap',
+                   zoom=15)
+ggmap(mapImage) +
+  geom_point(aes(x = subset(data, alt==max(data$alt))$lon[1],
+                 y = subset(data, alt==max(data$alt))$lat[1]),
+             alpha = .5,
+             color="darkred",
+             size = 10) +
+  ggtitle('Highest Point in 2014')
 ````
 
-```{r where is the lowest point?, echo=FALSE}
-library(ggmap)
-LowestLocation = c(lon=subset(data, alt==min(data$alt))$lon[1],
-                   lat=subset(data, alt==min(data$alt))$lat[1])
-mapImage<- get_map(location= LowestLocation, source = 'google', maptype='roadmap', zoom=15)
-ggmap(mapImage) + geom_point(aes(x = subset(data, alt==min(data$alt))$lon[1],
-                                 y = subset(data, alt==min(data$alt))$lat[1]), alpha = .5, color="darkred", size = 10) + ggtitle('Lowest Point in 2014')
-````
+# Where was I in Switzerland?
+To plot the obtained data on a map, we have to center the resulting map location.
+Since I only want to show the data points in Switzerland, we center the map on that.
+Afterwards, we can simply plot all the `data` points on top of that image, and you can see where I was in Switzerland in 2014.
 
-To plot the obtained data on a map, we have to center said map.
-It's probably best if we center the location on the 'median' of all the locations.
-````{r location}
-library(ggmap)
-MapCenter <- c(lon=median(data$lon), lat=median(data$lat))
+```{r display map, message=FALSE}
+HomeBase <- get_map(location= 'Switzerland',
+                   source = 'google',
+                   maptype='roadmap',
+                   zoom=8)
+AllPoints <- data.frame(lon=data$lon,
+                        lat = data$lat)
+ggmap(HomeBase) + geom_point(aes(x = lon,
+                                 y = lat),
+                             data = AllPoints,
+                             size = 3,
+                             alpha = 0.25)
 ```
-
-We want to plot the location points on a map, which we can do with the wonderful [`ggmap`](http://cran.r-project.org/web/packages/ggmap/) library.
-
-```{r display map}
-library(ggmap)
-mapImage<- get_map(location= myLocation, source = 'google', maptype='roadmap', zoom=8)
-ggmap(mapImage) + geom_point(aes(x = data$lon, y = data$lat), alpha = .5, color="darkred", size = 3)
-```
-
