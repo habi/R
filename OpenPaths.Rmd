@@ -17,13 +17,24 @@ Log in to OpenPaths, and click on *CSV* under *Download my data*, which gives yo
 # Data
 We want to plot the location points on a map, which we can do with the wonderful [`ggmap`](http://cran.r-project.org/web/packages/ggmap/) library.
 First, we load the CSV file and display a summary of the data.
-```{r load CSV}
+
+```{r load CSV and data, message=FALSE}
 library(ggmap)
 data <- read.csv("openpaths_habi.csv")
-summary(data)
 ```
 
-We see that in 2014 I changed from an iPhone 4S ([`iPhone4,1`](http://www.everymac.com/ultimate-mac-lookup/?search_keywords=iPhone4,1)) to an iPhone 5S ([`iPhone6,2`](http://www.everymac.com/ultimate-mac-lookup/?search_keywords=iPhone6,2)) and went through at least 6 iOS version numbers.
+```{r display location summary, message=FALSE}
+summary(data$lat)
+summary(data$lon)
+summary(data$alt)
+```
+In 2014 I was somewhere in [woods sowewhere in Romania](https://www.google.ch/maps/place/46°00'00.0%22N+21°48'00.0%22E) in the mean, and [somewhere close to Beromüster](https://www.google.ch/maps/place/47°12'00.0%22N+8°12'00.0%22E) as the median.
+
+```{r display other information CSV and data, message=FALSE}
+summary(data$device)
+summary(data$os)
+```
+We see that in 2014 I changed from an iPhone 4S ([`iPhone4,1`](http://www.everymac.com/ultimate-mac-lookup/?search_keywords=iPhone4,1)) to an iPhone 5S ([`iPhone6,2`](http://www.everymac.com/ultimate-mac-lookup/?search_keywords=iPhone6,2)) and went through 10 different iOS version numbers.
 
 # Location data
 ## Extremes
@@ -54,7 +65,7 @@ Correctly, the northmost point would be in Oslo, where I spent New Years Eve 201
 
 The rest of the extremes can be extracted accordingly.
 
-```{r where is the most eastern point?, echo=FALSE, message=FALSE}
+```{r where are the other cardinal direction extremes?, echo=FALSE, message=FALSE}
 ELocation = c(lon=subset(data, lon==max(data$lon))$lon[1],
               lat=subset(data, lon==max(data$lon))$lat[1])
 mapImage<- get_map(location= ELocation, source = 'google', maptype='roadmap', zoom=15)
@@ -86,7 +97,7 @@ ggmap(mapImage) +
              alpha = .5,
              color="darkred",
              size = 10) +
-  ggtitle('Most eastern point in 2014')
+  ggtitle('Most western point in 2014')
 ````
 
 The most eastern point was (unsurprisingly) in [Japan](https://www.flickr.com/photos/habi/sets/72157644608251866/), the most southern point in [Cyprus](https://www.flickr.com/photos/habi/sets/72157649175258515/) and the most eastern point in Amsterdam, while flying to Japan.
@@ -115,7 +126,7 @@ To plot the obtained data on a map, we have to center the resulting map location
 Since I only want to show the data points in Switzerland, we center the map on that.
 Afterwards, we can simply plot all the `data` points on top of that image, and you can see where I was in Switzerland in 2014.
 
-```{r display map, message=FALSE}
+```{r Swiss Locations, message=FALSE, warning=FALSE}
 HomeBase <- get_map(location= 'Switzerland',
                    source = 'google',
                    maptype='roadmap',
