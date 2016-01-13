@@ -18,13 +18,15 @@ Log in to OpenPaths, and click on *CSV* under *Download my data*, which gives yo
 
 # Data
 We want to plot the location points on a map, which we can do with the wonderful [`ggmap`](http://cran.r-project.org/web/packages/ggmap/) library.
-First, we load the CSV file and display a summary of the data.
+First, we load the CSV file, remove all the datapoints where we have an altitudes of '0', filter only to this years data.
+Then we display a summary of the data.
 
 ```{r load CSV and data, message=FALSE, warning=FALSE}
 library(ggmap)
 data <- read.csv("openpaths_habi.csv")
+data$alt[data$alt == 0] <- NA
 whichyear <- 2015
-thisyear <- subset(data, grepl(whichyear, data$date)) 
+thisyear <- subset(data, grepl(whichyear, data$date))
 ```
 
 Then, we display a summary of the geographical points.
@@ -33,7 +35,7 @@ summary(thisyear$lat)
 summary(thisyear$lon)
 summary(thisyear$alt)
 ```
-In `r whichyear` I was [somewhere close to Huttwil](https://www.google.ch/maps/place/`r mean(thisyear$lat)`,`r mean(thisyear$lon)`) in the mean, and [somewhere in the Emmental](https://www.google.ch/maps/place/`r median(thisyear$lat)`,`r median(thisyear$lon)`) as the median. I've lived at 527 [AMSL](https://en.wikipedia.org/wiki/Sea_level) in the mean.
+In `r whichyear` I was [somewhere close to Huttwil](http://www.openstreetmap.org/#map=12/`r mean(thisyear$lat)`/`r mean(thisyear$lon)`) in the mean, and [somewhere in the Emmental](http://www.openstreetmap.org/#map=12/`r median(thisyear$lat)`/`r median(thisyear$lon)`) as the median. I've lived at `r mean(thisyear$alt, na.rm=TRUE)` m [AMSL](https://en.wikipedia.org/wiki/Sea_level) in the mean.
 
 The .csv file also contains information about the iPhone we've used to collect the data.
 Let's look at these.
@@ -50,7 +52,7 @@ Interesting points in my yearly location data:
 
   - The minimal and maximal latitudes of `r round(min(thisyear$lat),3)` and `r round(max(thisyear$lat),3)`, South and North respectively.
   - the minimal and maximal longitudes of `r round(min(thisyear$lon),3)` to `r round(max(thisyear$lon),3)`, East and West respectively.
-  - as well as the altitude, which ranges from `r round(min(thisyear$alt),1)` [AMSL](https://en.wikipedia.org/wiki/Sea_level) to `r round(max(thisyear$alt),1)` AMSL.
+  - as well as the altitude, which ranges from `r round(min(thisyear$alt, na.rm=TRUE),1)` m AMSL to `r round(max(thisyear$alt, na.rm=TRUE),1)` m AMSL.
   
 We can get the extreme points out of the data pretty easily.
 To do so, we `subset` the data depending on the value we want to have, construct a Location from these points, grab the Google map tile from that location, put a marker on top of it and display this is an image.
@@ -59,7 +61,7 @@ For the northmost point, this goes like so:
 ```{r northmost point, message=FALSE}
 NLocation = c(lon=subset(thisyear, lat==max(thisyear$lat))$lon[1],
               lat=subset(thisyear, lat==max(thisyear$lat))$lat[1])
-mapImage<- get_map(location= NLocation, source='stamen', maptype='watercolor', zoom=12)
+mapImage<- get_map(location= NLocation, source='stamen', maptype='toner-hybrid', zoom=10)
 ggmap(mapImage) +
   geom_point(aes(x = subset(thisyear, lat==max(thisyear$lat))$lon[1],
                  y = subset(thisyear, lat==max(thisyear$lat))$lat[1]),
@@ -69,15 +71,15 @@ ggmap(mapImage) +
   ggtitle(paste("Northmost point in", whichyear))
 ````
 
-The northmost point in `r whichyear` is close to the [Ruine Scharfenstein](https://www.google.ch/maps/place/`r rev(NLocation)`).
-I've not really been been to the Ruine, but spent two days in Ingelheim in January, at the [International Masters competition in Swimming](http://www.ssv-ingelheim.de/veranstaltungen/masterwettkampf/).
+The northmost point in `r whichyear` is close to [Ingelheim](http://www.openstreetmap.org/#map=12/`r NLocation[c(2)]`/`r NLocation[c(1)]`), which is true.
+I spent two days in Ingelheim in January, at the [International Masters competition in Swimming](http://www.ssv-ingelheim.de/veranstaltungen/masterwettkampf/).
 
 The rest of the extremes can be extracted accordingly.
 
 ```{r other cardinal direction extremes, echo=1:2, echo=12:13, message=FALSE}
 ELocation = c(lon=subset(thisyear, lon==max(thisyear$lon))$lon[1],
               lat=subset(thisyear, lon==max(thisyear$lon))$lat[1])
-mapImage<- get_map(location= ELocation, source='stamen', maptype='watercolor', zoom=12)
+mapImage<- get_map(location= ELocation, source='stamen', maptype='toner-hybrid', zoom=10)
 ggmap(mapImage) +
   geom_point(aes(x = subset(thisyear, lon==max(thisyear$lon))$lon[1],
                  y = subset(thisyear, lon==max(thisyear$lon))$lat[1]),
@@ -88,7 +90,7 @@ ggmap(mapImage) +
 
 SLocation = c(lon=subset(thisyear, lat==min(thisyear$lat))$lon[1],
               lat=subset(thisyear, lat==min(thisyear$lat))$lat[1])
-mapImage<- get_map(location= SLocation, source='stamen', maptype='watercolor', zoom=12)
+mapImage<- get_map(location= SLocation, source='stamen', maptype='toner-hybrid', zoom=10)
 ggmap(mapImage) +
   geom_point(aes(x = subset(thisyear, lat==min(thisyear$lat))$lon[1],
                  y = subset(thisyear, lat==min(thisyear$lat))$lat[1]),
@@ -99,7 +101,7 @@ ggmap(mapImage) +
 
 WLocation = c(lon=subset(thisyear, lon==min(thisyear$lon))$lon[1],
               lat=subset(thisyear, lon==min(thisyear$lon))$lat[1])
-mapImage<- get_map(location= WLocation, source='stamen', maptype='watercolor', zoom=12)
+mapImage<- get_map(location= WLocation, source='stamen', maptype='toner-hybrid', zoom=10)
 ggmap(mapImage) +
   geom_point(aes(x = subset(thisyear, lon==min(thisyear$lon))$lon[1],
                  y = subset(thisyear, lon==min(thisyear$lon))$lat[1]),
@@ -109,16 +111,14 @@ ggmap(mapImage) +
     ggtitle(paste("Most western point in", whichyear))
 ````
 
-The most eastern point was in the [Bregenzer Wald](https://www.google.ch/maps/place/`r rev(ELocation)`), the first vacation with our (then) newborn daughter.
-The most southern point was in [Cervinia](https://www.google.ch/maps/place/`r rev(SLocation)`), while skiing in Zermatt.
-The most western point was in [Lausanne](https://www.google.ch/maps/place/`r rev(WLocation)`), for working on the [GlobalDiagnostiX](http://globaldiagnostix.org/) project.
+The most eastern point was in the [Bregenzer Wald](http://www.openstreetmap.org/#map=12/`r ELocation[c(2)]`/`r ELocation[c(1)]`), the first vacation with our (then) newborn daughter.
+The most southern point was in [Cervinia](http://www.openstreetmap.org/#map=12/`r SLocation[c(2)]`/`r SLocation[c(1)]`), while skiing in Zermatt.
+The most western point was in [Lausanne](http://www.openstreetmap.org/#map=12/`r WLocation[c(2)]`/`r WLocation[c(1)]`), for working on the [GlobalDiagnostiX](http://globaldiagnostix.org/) project.
 
 ```{r highest point, echo=FALSE, message=FALSE, warning=FALSE}
-HighestLocation = c(lon=subset(thisyear, alt==max(thisyear$alt))$lon[1],
-                    lat=subset(thisyear, alt==max(thisyear$alt))$lat[1])
-LowestLocation = c(lon=subset(thisyear, alt==min(thisyear$alt))$lon[1],
-                    lat=subset(thisyear, alt==min(thisyear$alt))$lat[1])
-mapImage<- get_map(location= HighestLocation, source='stamen', maptype='watercolor', zoom=12)
+HighestLocation = c(lon=subset(thisyear, alt==max(thisyear$alt, na.rm=TRUE))$lon[1],
+                    lat=subset(thisyear, alt==max(thisyear$alt, na.rm=TRUE))$lat[1])
+mapImage<- get_map(location= HighestLocation, source='stamen', maptype='toner-hybrid', zoom=10)
 ggmap(mapImage) +
   geom_point(aes(x = subset(thisyear, alt==max(thisyear$alt))$lon[1],
                  y = subset(thisyear, alt==max(thisyear$alt))$lat[1]),
@@ -126,10 +126,20 @@ ggmap(mapImage) +
              color="darkred",
              size = 10) +
     ggtitle(paste("Highest point in", whichyear))
+LowestLocation = c(lon=subset(thisyear, alt==min(thisyear$alt, na.rm=TRUE))$lon[1],
+                    lat=subset(thisyear, alt==min(thisyear$alt, na.rm=TRUE))$lat[1])
+mapImage<- get_map(location= LowestLocation, source='stamen', maptype='toner-hybrid', zoom=10)
+ggmap(mapImage) +
+  geom_point(aes(x = subset(thisyear, alt==max(thisyear$alt))$lon[1],
+                 y = subset(thisyear, alt==max(thisyear$alt))$lat[1]),
+             alpha = .125,
+             color="darkred",
+             size = 10) +
+    ggtitle(paste("Closest to sealevel in", whichyear))
 ````
 
-The highest in `r whichyear` was on the [Furgsattel](https://www.google.ch/maps/place/`r rev(HighestLocation)`), at `r round(max(thisyear$alt),1)` AMSL while skiing in Zermat.
-The lowest point at `r min(thisyear$alt)` AMSL was at [home]((https://www.google.ch/maps/place/`r rev(LowestLocation)`)) and is probably a fluke in the GPS data :)
+The highest in `r whichyear` was on the [Furgsattel](http://www.openstreetmap.org/#map=12/`r HighestLocation[c(2)]`/`r HighestLocation[c(1)]`), at `r round(max(thisyear$alt, na.rm=TRUE),1)` m AMSL while skiing in Zermat.
+The lowest point at `r round(min(thisyear$alt, na.rm=TRUE),1)` m AMSL was at [Germany, also in Ingelheim](http://www.openstreetmap.org/#map=12/`r LowestLocation[c(2)]`/`r LowestLocation[c(1)]`).
 
 # Where was I in Switzerland?
 To plot the obtained data on a map, we have to center the resulting map location.
@@ -137,11 +147,12 @@ Since I only want to show the data points in Switzerland, we center the map on t
 Afterwards, we can simply plot all the `thisyear` geolocation points on top of that image, and you can see where I was in Switzerland in `r whichyear`.
 
 ```{r Swiss Locations, message=FALSE, warning=FALSE}
-HomeBase <- get_map(location= 'Switzerland', source = 'stamen', maptype='watercolor', zoom=7)
+HomeBase <- get_map(location= 'Switzerland', source = 'stamen', maptype='toner-hybrid', zoom=8)
 AllPoints <- data.frame(lon=thisyear$lon, lat=thisyear$lat)
 ggmap(HomeBase) + geom_point(aes(x = lon, y = lat),
                              data = AllPoints,
                              size = 3,
                              alpha = 0.125,
-                             color="darkred")
+                             color="darkred") +
+    ggtitle(paste("Where was Habi in Switzerland in", whichyear))
 ```
