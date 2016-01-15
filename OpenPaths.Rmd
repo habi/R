@@ -2,7 +2,10 @@
 title: "Visualizing OpenPaths.cc data with R"
 author: "David Haberthür"
 date: "15 January 2016"
-output: html_document
+output:
+  html_document:
+    keep_md: yes
+    self_contained: no
 ---
 
 # Introduction
@@ -71,7 +74,7 @@ Interesting points in my yearly location data:
   - as well as the altitude, which ranges from `r round(min(thisyear$alt, na.rm=TRUE),1)` m AMSL to `r round(max(thisyear$alt, na.rm=TRUE),1)` m AMSL.
   
 We can get the extreme points out of the data pretty easily.
-To do so, we `subset` the data depending on the value we want to have, construct a Location from these points, grab the Google map tile from that location, put a marker on top of it and display this is an image.
+To do so, we `subset` the data depending on the value we want to have, construct a Location from these points, grab the map tile from that location, put a marker on top of it and display this is an image.
 
 For the northmost point, this goes like so:
 ```{r northmost point, message=FALSE}
@@ -114,7 +117,7 @@ ggmap(mapImage) +
              alpha = .125,
              color="darkred",
              size = 10) +
-    ggtitle(paste("Southhmost point in", whichyear))
+    ggtitle(paste("Southmost point in", whichyear))
 
 WLocation = c(lon=subset(thisyear, lon==min(thisyear$lon))$lon[1],
               lat=subset(thisyear, lon==min(thisyear$lon))$lat[1])
