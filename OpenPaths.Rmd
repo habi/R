@@ -5,7 +5,7 @@ date: "15 January 2016"
 output:
   html_document:
     keep_md: yes
-    self_contained: no
+    toc: yes
 ---
 
 # Introduction
@@ -165,7 +165,7 @@ The lowest point at `r round(min(thisyear$alt, na.rm=TRUE),1)` m AMSL was in `r 
 # Where was I in Switzerland?
 To plot the obtained data on a map, we have to center the resulting map location.
 Since I only want to show the data points in Switzerland, we center the map on that.
-Afterwards, we can simply plot all the `thisyear` geolocation points on top of that image, and you can see where I was in Switzerland in `r whichyear`.
+Afterwards, we can simply plot all the `r whichyear` geolocation points on top of that image, and you can see where I was in Switzerland in `r whichyear`.
 
 ```{r Swiss Locations, message=FALSE, warning=FALSE}
 HomeBase <- get_map(location= 'Switzerland', source = 'stamen', maptype='toner-hybrid', zoom=8)
